@@ -9,7 +9,6 @@ $ sudo nano /etc/wpa_supplicant/wpa_supplicant.conf
 and add the following to the bottom:
 ```
 network={
-network={
     ssid="NEWTORK NAME HERE"
     psk="NETWORK PASSWORD HERE"
 }
