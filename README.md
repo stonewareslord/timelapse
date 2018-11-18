@@ -28,4 +28,8 @@ systemctldisable systemd-timesyncd ntp apt-daily-upgrade.timer
 # throttling wifi (helps with kernel panicks during high load)
 sudo apt install wondershaper
 wondershaper wlan0 256 168
+
+#
+sudo systemtcl daemon-reload
+sudo systemctl enable timedate
 ```
