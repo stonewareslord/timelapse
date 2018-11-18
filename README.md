@@ -15,7 +15,7 @@ network={
 ```
 Exit the editor with cntrl x, y, enter
 
-# "personal" notes
+# "Personal" notes
 ```
 shopt -s extglob
 #
@@ -23,7 +23,7 @@ sudo rm -r /etc/cron.daily/!(logrotate)
 sudo rm -r /etc/cron.weekly/man-db
 
 # removing time checks
-systemctldisable systemd-timesyncd ntp
+systemctldisable systemd-timesyncd ntp apt-daily-upgrade.timer
 
 # throttling wifi (helps with kernel panicks during high load)
 sudo apt install wondershaper
