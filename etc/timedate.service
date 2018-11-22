@@ -1,0 +1,10 @@
+[Unit]
+Description=Restart time
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/home/pi/timelapse/timedate.sh
+
+[Install]
+WantedBy=multi-user.target
