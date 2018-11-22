@@ -33,3 +33,14 @@ wondershaper wlan0 256 128
 sudo systemtcl daemon-reload
 sudo systemctl enable timedate
 ```
+
+## Partitioning
+open gparted
+shrink root partition
+add new FAT partition
+mount root partition
+edit etc/fstab
+add line:
+```
+/dev/sda3   /home/pi/Documents  vfat    noatime,noauto  0   2
+```
