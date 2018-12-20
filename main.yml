@@ -1,0 +1,76 @@
+---
+- hosts: all
+  gather_facts: False
+  tasks:
+  - name: Install python 2
+    become: yes
+    raw: command -v /usr/bin/python || { apt -y update && apt install -y python-minimal && echo "Installed python"; }
+    register: result
+    changed_when: "'Installed python' in result.stdout_lines"
+- hosts: all
+  vars:
+    ssid: "SSID"
+    psk: "PSK"
+    ssh_password_auth: true
+  tasks:
+    - name: Update
+      become: yes
+      apt:
+        autoclean: yes
+        autoremove: yes
+        upgrade: dist
+        update_cache: yes
+    - name: Install requirements
+      apt:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - imagemagick
+        - wondersharper
+    - name: Configure WiFi
+      become: yes
+      template:
+        src: files/wpa_supplicant.conf
+        dest: /etc/wpa_supplicant/wpa_supplicant.conf
+    - name: Configure SSH
+      become: yes
+      template:
+        src: files/sshd_config
+        dest: /etc/ssh/sshd_config
+    - name: Copy timedate service
+      copy:
+        src: "files/timedate.service"
+        dest: "/etc/systemd/system/timedate.service" 
+        owner: root
+        group: root
+        mode: '0755'
+    - name: Enable timedate service
+      systemd:
+        name: timedate
+        daemon_reload: yes
+        enabled: yes
+        state: started
+    - name: Copy core scripts
+      copy:
+        src: "files/{{ item }}"
+        dest: "/usr/local/bin/{{ item }}"
+        owner: root
+        group: root
+        mode: '0755'
+      loop:
+        - instapic.sh
+        - ipgetter.sh
+        - timedate.sh
+        - wifireconnect.sh
+    - name: Remove extra cron lines
+      become: yes
+      file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /etc/cron.daily/TODO
+        - /etc/cron.weekly/man-db
+    - name: Disable extra services
+      systemd:
+        name: "{{ item }}"
+        enabled: no
