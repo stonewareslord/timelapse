@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 logger "Syncing time $(date +%F-%T)"
 until timeout 30s ntpdate pool.ntp.org;
 	do sleep 5
