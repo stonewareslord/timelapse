@@ -1,0 +1,5 @@
+# Courtsey to https://weworkweplay.com/play/automatically-connect-a-raspberry-pi-to-a-wifi-network/
+allow-hotplug wlan0
+iface wlan0 inet dhcp
+wpa-conf /etc/wpa_supplicant/wpa_supplicant.conf
+iface default inet dhcp

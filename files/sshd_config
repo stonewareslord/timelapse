@@ -1,0 +1,21 @@
+Protocol 2
+Port 22
+
+PermitRootLogin no
+PermitEmptyPasswords no
+{% if ssh_password_auth %}
+ChallengeResponseAuthentication yes
+PasswordAuthentication yes
+AuthenticationMethods publickey keyboard-interactive
+{% else %}
+ChallengeResponseAuthentication no
+PasswordAuthentication no
+AuthenticationMethods publickey
+{% endif %}
+
+UsePAM yes
+PrintMotd no
+PrintLastLog no
+
+Subsystem       sftp    /usr/lib/openssh/sftp-server
+AcceptEnv LANG LC_*

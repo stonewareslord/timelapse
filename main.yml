@@ -2,17 +2,16 @@
 - hosts: all
   gather_facts: False
   tasks:
-  - name: Install python 2
-    become: yes
-    raw: command -v /usr/bin/python || { apt -y update && apt install -y python-minimal && echo "Installed python"; }
-    register: result
-    changed_when: "'Installed python' in result.stdout_lines"
+    - name: Install python 2
+      become: yes
+      raw: command -v /usr/bin/python || { apt -y update && apt install -y python-minimal && echo "Installed python"; }
+      register: result
+      changed_when: "'Installed python' in result.stdout_lines"
 - hosts: all
-  vars:
-    ssid: "SSID"
-    psk: "PSK"
-    ssh_password_auth: true
   tasks:
+    - name: Log
+      debug:
+        msg: "networks: {{ networks }}"
     - name: Update
       become: yes
       apt:
@@ -20,37 +19,34 @@
         autoremove: yes
         upgrade: dist
         update_cache: yes
+      when: "no_update is not defined"
     - name: Install requirements
+      become: yes
       apt:
         name: "{{ item }}"
         state: present
       loop:
         - imagemagick
-        - wondersharper
+        - ntpdate
+        - wondershaper
     - name: Configure WiFi
       become: yes
       template:
-        src: files/wpa_supplicant.conf
-        dest: /etc/wpa_supplicant/wpa_supplicant.conf
+        src: "files/{{ item.src }}"
+        dest: "{{ item.dest }}"
+      loop:
+        - { src: "wpa_supplicant.conf", dest: "/etc/wpa_supplicant/wpa_supplicant.conf" }
+        - { src: "wlan0", dest: "/etc/network/interfaces.d/wlan0" }
     - name: Configure SSH
       become: yes
       template:
         src: files/sshd_config
         dest: /etc/ssh/sshd_config
-    - name: Copy timedate service
-      copy:
-        src: "files/timedate.service"
-        dest: "/etc/systemd/system/timedate.service" 
         owner: root
         group: root
-        mode: '0755'
-    - name: Enable timedate service
-      systemd:
-        name: timedate
-        daemon_reload: yes
-        enabled: yes
-        state: started
+        validate: /usr/sbin/sshd -t -f %s
     - name: Copy core scripts
+      become: yes
       copy:
         src: "files/{{ item }}"
         dest: "/usr/local/bin/{{ item }}"
@@ -62,15 +58,59 @@
         - ipgetter.sh
         - timedate.sh
         - wifireconnect.sh
+    - name: Copy timedate service
+      become: yes
+      copy:
+        src: "files/timedate.service"
+        dest: "/etc/systemd/system/timedate.service"
+        owner: root
+        group: root
+        mode: '0755'
+    - name: Enable services
+      become: yes
+      systemd:
+        name: "{{ item }}"
+        daemon_reload: yes
+        enabled: yes
+      loop:
+        - ssh
+        - timedate
     - name: Remove extra cron lines
       become: yes
       file:
         path: "{{ item }}"
         state: absent
       loop:
-        - /etc/cron.daily/TODO
+        - /etc/cron.daily/apt-compat
+        - /etc/cron.daily/aptitude
+        - /etc/cron.daily/bsdmainutils
+        - /etc/cron.daily/dpkg
+        - /etc/cron.daily/man-db
         - /etc/cron.weekly/man-db
+    - name: Enable raspi camera
+      become: yes
+      lineinfile:
+        path: /boot/config.txt
+        line: "{{ item }}"
+      loop:
+        - gpu_mem=128
+        - start_x=1
     - name: Disable extra services
+      become: yes
       systemd:
         name: "{{ item }}"
         enabled: no
+      loop:
+        - apt-daily-upgrade.timer
+        - systemd-timesyncd
+        - avahi-daemon
+        - bluetooth
+    - name: Ensure mountpoint
+      become: yes
+      lineinfile:
+        path: /etc/fstab
+        regexp: '^/dev/sda1\s+/home/pi/Documents.*'
+        line: "/dev/sda1 /home/pi/Documents vfat nofail,noatime,user,rw,uid=1000,gid=0 0 2"
+    - name: Reboot
+      become: yes
+      reboot:

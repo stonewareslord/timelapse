@@ -1,0 +1,3 @@
+networks:
+  - { ssid: "Network1", psk: "password" }
+ssh_password_auth: true
