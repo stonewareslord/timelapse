@@ -95,6 +95,10 @@
       loop:
         - gpu_mem=128
         - start_x=1
+    - name: Enable camera service
+      cron:
+        name: "Take pictures"
+        job: instapic.sh
     - name: Disable extra services
       become: yes
       systemd:
@@ -105,7 +109,11 @@
         - systemd-timesyncd
         - avahi-daemon
         - bluetooth
-    - name: Ensure mountpoint
+    - name: Create mountpoint
+      file:
+        path: /home/pi/Documents
+        state: directory
+    - name: Ensure mountpoint exists
       become: yes
       lineinfile:
         path: /etc/fstab
