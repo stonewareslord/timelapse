@@ -5,7 +5,14 @@ TZ="UTC"
 #read YYYY MM DD HH MIN SEC<<<"$(date +'%Y %m %d %H %M %S')"
 read YYYY MM DD HH MIN SEC<<<"$(date --date='5 seconds'  +'%Y %m %d %H %M %S')"
 
-FILEPATH="/home/pi/Documents/fp/fp-${YYYY}-${MM}-${DD}/"
+if findmnt -M /mnt >/dev/null; then
+  # The disk is mounted. Copy files to /mnt
+  FILEDIR="/mnt"
+else
+  # The disk is not mounted. 
+  FILEDIR="/home/pi/Documents/fp"
+fi
+FILEPATH="$FILEDIR/fp-${YYYY}-${MM}-${DD}/"
 PICFILENAME="${YYYY}-${MM}-${DD}-${HH}-${MIN}-${SEC}.JPEG"
 TIMESTAMP="${YYYY}/${MM}/${DD} ${HH}:${MIN}:${SEC}"
 

@@ -23,12 +23,14 @@
     - name: Install requirements
       become: yes
       apt:
-        name: "{{ item }}"
+        name: "{{ packages }}"
         state: present
-      loop:
-        - imagemagick
-        - ntpdate
-        - wondershaper
+      vars:
+        packages:
+          - imagemagick
+          - ntpdate
+          - rsync
+          - wondershaper
     - name: Configure WiFi
       become: yes
       template:
@@ -99,6 +101,16 @@
       cron:
         name: "Take pictures"
         job: instapic.sh
+    - name: Notify boot
+      cron:
+        name: "Notify boot"
+        job: 'until timeout 10s curl -s --form-string "token=aPMr26728iRpibVaBEt3oqVWtwksDE" --form-string "user=u4q8jtrZo9rzzvNX8A2vtoJSNBYMvS" --form-string "message=Booted on $(date +%F-%T)" https://api.pushover.net/1/messages.json; do sleep 5; done'
+        special_time: reboot
+    - name: Recover pictures from documents
+      cron:
+        name: "Recover pictures"
+        job: "findmnt -M /mnt >/dev/null && rsync --remove-source-files -hrlcv /home/pi/Documents/fp/ /mnt/recovered/"
+        special_time: reboot
     - name: Disable extra services
       become: yes
       systemd:
@@ -115,10 +127,11 @@
         state: directory
     - name: Ensure mountpoint exists
       become: yes
+      tags: dev
       lineinfile:
         path: /etc/fstab
         regexp: '^/dev/sda1\s+/home/pi/Documents.*'
-        line: "/dev/sda1 /home/pi/Documents vfat nofail,noatime,user,rw,uid=1000,gid=0 0 2"
+        line: "/dev/sda1 /mnt vfat nofail,noatime,user,rw,uid=1000,gid=0 0 2"
     - name: Reboot
       become: yes
-      reboot:
+      reboot: ~
